@@ -1,21 +1,45 @@
 "use client";
 import { firestore } from "@/firebase/config";
-import { doc, setDoc } from "firebase/firestore";
-import { FormEventHandler, useState } from "react";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { FormEventHandler, useEffect, useState } from "react";
+
+type dataTypes = {
+  amount: number;
+  description: string;
+  date: Date;
+};
 
 export default function Home() {
   const [values, setValues] = useState({ amount: 0, description: "" });
+  const [data, setData] = useState<dataTypes | null>(null);
+  const d = new Date(data?.date?.seconds * 1000).toString().substring(0, 16);
+  console.log(data);
+
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     try {
-      setDoc(doc(firestore, "expends", "oneUniqueId"), {
-        values,
+      setDoc(doc(firestore, "expends", values.description), {
+        ...values,
         date: new Date(),
       }).then();
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      const collectionReference = collection(firestore, "expends");
+      try {
+        const querySnapshot = await getDocs(collectionReference);
+        const documents = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setData(documents);
+      } catch (error) {}
+    })();
+  }, []);
 
   return (
     <main>
@@ -57,6 +81,27 @@ export default function Home() {
         </div>
         <button className="bg-gray-700 py-4 w-full rounded-full">Submit</button>
       </form>
+
+      <div>
+        <table>
+          <thead>
+            <tr className="flex gap-4">
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* {data.map((item, idx) => (
+              <tr key={idx}>
+                <td>{item.amount}</td>
+                <td>{item.description}</td>
+                <td>{item.date}</td>
+              </tr>
+            ))} */}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }
