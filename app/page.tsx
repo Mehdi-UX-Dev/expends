@@ -1,27 +1,37 @@
 "use client";
 import { firestore } from "@/firebase/config";
-import { collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { FormEventHandler, useEffect, useState } from "react";
 
 type dataTypes = {
+  id: string;
   amount: number;
   description: string;
-  date: Date;
+  date: {
+    seconds: number;
+    nanoseconds: number;
+  };
 };
 
 export default function Home() {
   const [values, setValues] = useState({ amount: 0, description: "" });
-  const [data, setData] = useState<dataTypes | null>(null);
-  const d = new Date(data?.date?.seconds * 1000).toString().substring(0, 16);
+  const [data, setData] = useState<dataTypes[] | null>(null);
   console.log(data);
+
+  const [balance, setBalance] = useState(0);
+  // const d = new Date(data?.date?.seconds * 1000).toString().substring(0, 16);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     try {
+      //todo ux for confirmation
       setDoc(doc(firestore, "expends", values.description), {
         ...values,
         date: new Date(),
-      }).then();
+      });
+      setDoc(doc(firestore, "Current Balance", "balance"), {
+        balance: balance - values.amount,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -32,11 +42,24 @@ export default function Home() {
       const collectionReference = collection(firestore, "expends");
       try {
         const querySnapshot = await getDocs(collectionReference);
-        const documents = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const documents = querySnapshot.docs.map((doc) => {
+          const { id, amount, description, date } = doc.data();
+          return { id, amount, description, date };
+        });
         setData(documents);
+      } catch (error) {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const collectionReference = doc(firestore, "Current Balance", "balance");
+      try {
+        const querySnapshot = await getDoc(collectionReference);
+        if (querySnapshot.exists()) {
+          const { balance } = querySnapshot.data();
+          setBalance(balance);
+        }
       } catch (error) {}
     })();
   }, []);
@@ -82,26 +105,34 @@ export default function Home() {
         <button className="bg-gray-700 py-4 w-full rounded-full">Submit</button>
       </form>
 
-      <div>
-        <table>
-          <thead>
-            <tr className="flex gap-4">
-              <th>Amount</th>
-              <th>Description</th>
-              <th>Date</th>
+      <section>
+        <h1 className="text-[2rem] text-center mt-20">
+          Total Amount: {balance}
+        </h1>
+        <table className="w-full text-center max-w-4xl mx-auto mt-20">
+          <thead className="bg-gray-700">
+            <tr className="">
+              <th className="p-3">Amount</th>
+              <th className="p-3">Description</th>
+              <th className="p-3">Date</th>
             </tr>
           </thead>
-          <tbody>
-            {/* {data.map((item, idx) => (
-              <tr key={idx}>
-                <td>{item.amount}</td>
-                <td>{item.description}</td>
-                <td>{item.date}</td>
-              </tr>
-            ))} */}
+          <tbody className="border border-gray-700 ">
+            {data?.map((item, idx) => {
+              const date = new Date(item?.date?.seconds * 1000)
+                .toString()
+                .substring(0, 16);
+              return (
+                <tr key={idx} className="text-white">
+                  <td className="p-4">{item.amount}</td>
+                  <td className="p-4">{item.description}</td>
+                  <td className="p-4">{date}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-      </div>
+      </section>
     </main>
   );
 }
