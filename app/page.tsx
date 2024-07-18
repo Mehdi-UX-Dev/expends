@@ -3,6 +3,9 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { FormEventHandler, useEffect, useState } from "react";
 
+import { Slide, ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 type dataTypes = {
   id: string;
   amount: number;
@@ -19,7 +22,6 @@ export default function Home() {
   console.log(data);
 
   const [balance, setBalance] = useState(0);
-  // const d = new Date(data?.date?.seconds * 1000).toString().substring(0, 16);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -28,6 +30,15 @@ export default function Home() {
       setDoc(doc(firestore, "expends", values.description), {
         ...values,
         date: new Date(),
+      }).then(() => {
+        setValues({ amount: 0, description: "" });
+        toast.dark("Item added successfully", {
+          position: "top-center",
+          progressStyle: {
+            background: "green",
+          },
+          transition: Slide,
+        });
       });
       setDoc(doc(firestore, "Current Balance", "balance"), {
         balance: balance - values.amount,
@@ -66,6 +77,7 @@ export default function Home() {
 
   return (
     <main>
+      <ToastContainer />
       <h1 className="text-[4rem] text-center mt-8">Expends App</h1>
       <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-10">
         <div className="flex flex-col justify-center mt-10 gap-4">
@@ -76,6 +88,7 @@ export default function Home() {
             <input
               id="amount"
               type="number"
+              value={values.amount}
               className=" bg-gray-700 rounded-full h-10 pl-4"
               onChange={(e) =>
                 setValues((prev) => ({
@@ -91,6 +104,7 @@ export default function Home() {
             </label>
             <input
               id="description"
+              value={values.description}
               type="text"
               className="bg-gray-700 h-10 rounded-full pl-4"
               onChange={(e) =>
