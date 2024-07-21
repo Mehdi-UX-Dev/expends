@@ -1,5 +1,7 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEventHandler, useState } from "react";
+import { Slide, toast, ToastContainer } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -7,25 +9,31 @@ import "react-toastify/dist/ReactToastify.css";
 //todo make this page a server component
 export default function Home() {
   const [values, setValues] = useState({ name: "", password: "" });
+  const { replace } = useRouter();
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-
-    console.log(values.name === process.env.NEXT_PUBLIC_Name);
-    console.log(values.password === process.env.NEXT_PUBLIC_Password);
 
     if (
       values.name === process.env.NEXT_PUBLIC_Name &&
       values.password === process.env.NEXT_PUBLIC_Password
     ) {
+      replace("/home");
       console.log("right path");
     } else {
-      console.log("wrong path");
+      toast.dark("Invalid Credentials", {
+        position: "top-center",
+        progressStyle: {
+          background: "red",
+        },
+        transition: Slide,
+      });
     }
   };
 
   return (
     <main>
+      <ToastContainer />
       <h1 className="text-[4rem] text-center mt-8">Expends App</h1>
       <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-10">
         <div className="flex flex-col justify-center mt-10 gap-4">
