@@ -16,7 +16,6 @@ type dataTypes = {
   };
 };
 
-//todo the balance is not updating real time
 export default function Home() {
   const [values, setValues] = useState({ amount: 0, description: "" });
   const [data, setData] = useState<dataTypes[] | null>(null);
@@ -43,8 +42,14 @@ export default function Home() {
       setDoc(doc(firestore, "Current Balance", "balance"), {
         balance: balance - values.amount,
       });
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      toast.dark(error, {
+        position: "top-center",
+        progressStyle: {
+          background: "red",
+        },
+        transition: Slide,
+      });
     }
   };
 
@@ -132,18 +137,20 @@ export default function Home() {
             </tr>
           </thead>
           <tbody className="border border-gray-700 ">
-            {data?.map((item, idx) => {
-              const date = new Date(item?.date?.seconds * 1000)
-                .toString()
-                .substring(0, 16);
-              return (
-                <tr key={idx} className="text-white">
-                  <td className="p-4">{item.amount}</td>
-                  <td className="p-4">{item.description}</td>
-                  <td className="p-4">{date}</td>
-                </tr>
-              );
-            })}
+            {data
+              ?.sort((a, b) => b.date.seconds - a.date.seconds) // Sort by newest first
+              .map((item, idx) => {
+                const date = new Date(item.date.seconds * 1000)
+                  .toString()
+                  .substring(0, 16);
+                return (
+                  <tr key={idx} className="text-white">
+                    <td className="p-4">{item.amount}</td>
+                    <td className="p-4">{item.description}</td>
+                    <td className="p-4">{date}</td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </section>

@@ -4,9 +4,6 @@ import { FormEventHandler, useState } from "react";
 import { Slide, toast, ToastContainer } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
-
-//todo the balance is not updating real time
-//todo make this page a server component
 export default function Home() {
   const [values, setValues] = useState({ name: "", password: "" });
   const { replace } = useRouter();
@@ -19,7 +16,6 @@ export default function Home() {
       values.password === process.env.NEXT_PUBLIC_Password
     ) {
       replace("/home");
-      console.log("right path");
     } else {
       toast.dark("Invalid Credentials", {
         position: "top-center",
