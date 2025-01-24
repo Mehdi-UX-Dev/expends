@@ -1,4 +1,15 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
+import withSerwistInit from "@serwist/next";
 
-export default nextConfig;
+// Serwist configuration
+const withSerwist = withSerwistInit({
+  swSrc: "./sw",
+  swDest: "public/sw.js",
+});
+
+// Base Next.js configuration
+const baseNextConfig = {};
+
+// Merge the configurations
+const combinedConfig = withSerwist(baseNextConfig);
+
+export default combinedConfig;
